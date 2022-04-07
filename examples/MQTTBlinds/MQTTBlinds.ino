@@ -33,7 +33,7 @@
 #include <WiFiClient.h>
 
 #include <PubSubClient.h>
-#include <AM43Client.h>
+#include "AM43Client.h"
 #ifdef USE_NIMBLE
 #include <NimBLEDevice.h>
 #else
@@ -127,19 +127,19 @@ class MyAM43Callbacks: public AM43Callbacks {
 
     void onPosition(uint8_t pos) {
       Serial.printf("[%s] Got position: %d\r\n", this->rmtAddress.c_str(), pos);
-      this->mqtt->publish(topic("position").c_str(), String(pos).c_str(), false);
+      pubSubClient.publish(topic("position").c_str(), String(pos).c_str(), false);
     }
     void onBatteryLevel(uint8_t level) {
       // Ignore overly frequent battery messages. AM43s are known to spam them at times.
       if (this->lastBatteryMessage == 0 || millis() - this->lastBatteryMessage > 30000)  {
         Serial.printf("[%s] Got battery: %d\r\n", this->rmtAddress.c_str(), level);
-        this->mqtt->publish(topic("battery").c_str(), String(level).c_str(), false);
+        pubSubClient.publish(topic("battery").c_str(), String(level).c_str(), false);
         this->lastBatteryMessage = millis();
       }
     }
     void onLightLevel(uint8_t level) {
       Serial.printf("[%s] Got light: %d\r\n", this->rmtAddress.c_str(), level);
-      this->mqtt->publish(topic("light").c_str(), String(level).c_str(), false);
+      pubSubClient.publish(topic("light").c_str(), String(level).c_str(), false);
     }
     void onConnect(AM43Client *c) {
       this->mqtt = new PubSubClient(this->wifiClient);
@@ -162,7 +162,7 @@ class MyAM43Callbacks: public AM43Callbacks {
       Serial.printf("[%s] Disconnected\r\n", this->rmtAddress.c_str());
       if (this->mqtt != nullptr && this->mqtt->connected()) {
         // Publish offline availability as LWT is only for ungraceful disconnect.
-        this->mqtt->publish(topic("available").c_str(), "offline", true);
+        pubSubClient.publish(topic("available").c_str(), "offline", true);
         this->mqtt->loop();
         this->mqtt->disconnect();
       }
@@ -184,7 +184,7 @@ class MyAM43Callbacks: public AM43Callbacks {
         this->nextMqttAttempt = millis() + 5000;
         return;
       }
-      this->mqtt->publish(topic("available").c_str(), "online", true);
+      pubSubClient.publish(topic("available").c_str(), "online", true);
       this->mqtt->subscribe(topic("set").c_str());
       this->mqtt->subscribe(topic("set_position").c_str());
       this->mqtt->subscribe(topic("status").c_str());
@@ -195,15 +195,15 @@ class MyAM43Callbacks: public AM43Callbacks {
 
       sprintf(discTopic, discTopicTmpl, this->mqttName.c_str());
       sprintf(discPayload, discPayloadTmpl, AM43_MQTT_DEVICE_CLASS, this->deviceName.c_str(), this->rmtAddress.c_str(), MQTT_TOPIC_PREFIX, this->mqttName.c_str());
-      this->mqtt->publish(discTopic, discPayload, true);
+      pubSubClient.publish(discTopic, discPayload, true);
 
       sprintf(discTopic, discBattTopicTmpl, this->mqttName.c_str());
       sprintf(discPayload, discBattPayloadTmpl, this->deviceName.c_str(), this->rmtAddress.c_str(), MQTT_TOPIC_PREFIX, this->mqttName.c_str());
-      this->mqtt->publish(discTopic, discPayload, true);
+      pubSubClient.publish(discTopic, discPayload, true);
 
       sprintf(discTopic, discLightTopicTmpl, this->mqttName.c_str());
       sprintf(discPayload, discLightPayloadTmpl, this->deviceName.c_str(), this->rmtAddress.c_str(), MQTT_TOPIC_PREFIX, this->mqttName.c_str());
-      this->mqtt->publish(discTopic, discPayload, true);
+      pubSubClient.publish(discTopic, discPayload, true);
 #endif
       this->mqtt->loop();
     }
@@ -494,9 +494,9 @@ void reconnect_mqtt() {
       pubSubClient.publish(topPrefix("/LWT").c_str(), "Online", true);
       pubSubClient.subscribe(topPrefix("/restart").c_str());
       pubSubClient.subscribe(topPrefix("/enable").c_str());
-      pubSubClient.subscribe(topPrefix("/all/set").c_str());
-      pubSubClient.subscribe(topPrefix("/all/set_position").c_str());
-      pubSubClient.subscribe(topPrefix("/all/status").c_str());
+      pubSubClient.subscribe(topPrefix("/+/set").c_str());
+      pubSubClient.subscribe(topPrefix("/+/set_position").c_str());
+      pubSubClient.subscribe(topPrefix("/+/status").c_str());
       if (bleOnDemand) pubSubClient.subscribe(topPrefix("/cmnd/#").c_str());
       pubSubClient.loop();
 
