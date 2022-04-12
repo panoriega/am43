@@ -187,9 +187,9 @@ class MyAM43Callbacks: public AM43Callbacks {
       if (WiFi.status() != WL_CONNECTED || millis() < this->nextMqttAttempt) return;
 //      if (!this->mqtt->connect(topic("").c_str(), MQTT_USERNAME, MQTT_PASSWORD, topic("available").c_str(), 0, false, "offline")) {
         // Attempt to connect
-        if (!MQTTclient.connected()) {
+        if (!this->mqtt->connected()) {
           Serial.print("Attempting MQTT connection...\r\n");
-          while (!MQTTclient.connect("arduino", MQTT_USERNAME, MQTT_PASSWORD)) {
+          while (!this->mqtt->connect(this->rmtAddress, MQTT_USERNAME, MQTT_PASSWORD)) {
             Serial.print(".");
             delay(1000);
           }
