@@ -188,8 +188,8 @@ class MyAM43Callbacks: public AM43Callbacks {
 //      if (!this->mqtt->connect(topic("").c_str(), MQTT_USERNAME, MQTT_PASSWORD, topic("available").c_str(), 0, false, "offline")) {
         // Attempt to connect
         if (!this->mqtt->connected()) {
-          Serial.print("Attempting MQTT connection...\r\n");
-          while (!this->mqtt->connect(this->rmtAddress, MQTT_USERNAME, MQTT_PASSWORD)) {
+          Serial.printf("Attempting MQTT [%s] connection...\r\n",this->mqttName.c_str());
+          while (!this->mqtt->connect(this->mqttName.c_str(), MQTT_USERNAME, MQTT_PASSWORD)) {
             Serial.print(".");
             delay(1000);
           }
@@ -257,11 +257,7 @@ static void notifyCallback(BLERemoteCharacteristic* rChar, uint8_t* pData, size_
 
 
 void mqtt_callback(String &topic, String &payload) {
-  //pay[length] = '\0';
-  //String payload = String((char *)pay);
-  //String topic = String(top);
-  int length = payload.length() + topic.length();
-  Serial.printf("MQTT [%s]%d: %s\r\n", topic, length, payload.c_str());
+  Serial.printf("MQTT [%s]: %s\r\n", topic.c_str(), payload.c_str());
 
   int i1, i2, i3;
   i1 = topic.indexOf('/');
@@ -514,9 +510,9 @@ void reconnect_mqtt() {
       MQTTclient.publish(topPrefix("/LWT").c_str(), "Online");
       MQTTclient.subscribe(topPrefix("/restart").c_str());
       MQTTclient.subscribe(topPrefix("/enable").c_str());
-      MQTTclient.subscribe(topPrefix("/+/set").c_str());
-      MQTTclient.subscribe(topPrefix("/+/set_position").c_str());
-      MQTTclient.subscribe(topPrefix("/+/status").c_str());
+      MQTTclient.subscribe(topPrefix("/all/set").c_str());
+      MQTTclient.subscribe(topPrefix("/all/set_position").c_str());
+      MQTTclient.subscribe(topPrefix("/all/status").c_str());
       if (bleOnDemand) MQTTclient.subscribe(topPrefix("/cmnd/#").c_str());
       MQTTclient.loop();
   
