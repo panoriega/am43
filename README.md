@@ -14,7 +14,11 @@ Feel free to send PRs.
 Looking for native ESPHome support? [See this repo](https://github.com/buxtronix/esphome-am43)
 
 ## MQTTBlinds example overview
- 
+
+**********************************************************
+PubSubClient replaced by MQTT 2.5 on MQTTBlinds_v2 Example
+**********************************************************
+
 This sketch will scan for and auto-connect to any AM43 devices in range, then provide
 MQTT topics to control and get status from them.
 
